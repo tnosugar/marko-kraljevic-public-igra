@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kraljević Marko: Epska Saga — Nivo 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg-deep:#1a0f08; --bg-panel:#2a1a0a; --bg-hover:#3a2818; --bg-subtle:#221610;
+  --gold:#b8841a; --gold-bright:#ffd97a; --gold-dark:#8b6914; --gold-subtle:#6b4f10;
+  --parchment:#e6d5b8; --parchment-bright:#f0e0c0; --text-dim:#8a7a5a; --text-disabled:#5a5a5a;
+  --blood:#8b2222; --blood-bright:#a82a2a; --forest:#4a6b3a; --forest-bright:#6a8b4a;
+  --silver:#c3c9d2; --silver-bright:#e4e9f0; --silver-dark:#8a929e;
+  --marko-blue:#2c5f8d; --marko-blue-light:#4a7daa; --enemy-red:#8b2222;
+  --cinzel:'Cinzel',serif; --cormorant:'Cormorant Garamond',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:var(--cormorant);}
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;}
+#canvas{width:1280px;height:720px;position:relative;overflow:hidden;background:var(--bg-deep);
+  transform-origin:center center;box-shadow:0 0 60px rgba(0,0,0,.8);}
+img{ -webkit-user-drag:none; user-select:none; }
+
+/* ---- Scene & vignette ---- */
+.mk-screen{position:absolute;inset:0;background-size:cover;background-position:center;
+  color:var(--parchment);}
+.mk-vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 38%, rgba(10,6,3,.78) 100%);}
+
+/* ---- Tipografija ---- */
+.mk-title{font-family:var(--cinzel);font-weight:700;color:var(--gold);letter-spacing:.02em;
+  text-shadow:0 2px 8px rgba(0,0,0,.7);}
+.mk-eyebrow{font-family:var(--cinzel);font-size:13px;letter-spacing:.22em;color:var(--gold-dark);}
+.mk-citat{font-family:var(--cormorant);font-style:italic;color:var(--gold-subtle);font-size:15px;
+  text-shadow:0 1px 3px rgba(0,0,0,.8);}
+.mk-sub{font-family:var(--cinzel);font-size:17px;font-weight:600;color:var(--gold);margin:2px 0 8px;letter-spacing:.04em;}
+.mk-muted{color:var(--text-dim);font-size:15px;line-height:1.5;}
+
+/* ---- Divider ---- */
+.mk-div{display:flex;align-items:center;gap:6px;color:var(--gold-dark);font-size:9px;}
+.mk-div i{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-subtle),transparent);}
+
+/* ---- Dugmad ---- */
+.mk-btn{font-family:var(--cinzel);color:var(--parchment);background:transparent;border:none;
+  cursor:pointer;transition:all .15s ease;letter-spacing:.03em;}
+.mk-btn:hover{color:var(--gold-bright);}
+.mk-btn:active{transform:scale(.97);}
+.mk-btn:disabled{color:var(--text-disabled);cursor:not-allowed;}
+.mk-btn-md{font-size:18px;padding:9px 18px;}
+.mk-btn-lg{font-size:21px;padding:12px 26px;}
+.mk-btn-sm{font-size:14px;padding:6px 12px;}
+.mk-btn-primary{background:linear-gradient(180deg,#33200d,#241606);
+  border:1px solid var(--gold-dark);border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,217,122,.12);}
+.mk-btn-primary:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,217,122,.2);}
+.mk-btn-confirm{background:linear-gradient(180deg,#2a3a1c,#1c2712);border:1px solid var(--forest-bright);
+  border-radius:8px;color:var(--parchment-bright);box-shadow:0 3px 12px rgba(0,0,0,.5);}
+.mk-btn-confirm:hover{color:#fff;border-color:#8fb56a;}
+.mk-btn-ghost{border:1px solid var(--gold-subtle);border-radius:7px;background:rgba(0,0,0,.25);}
+
+/* ---- Panel frame look ---- */
+.mk-panelframe{background:linear-gradient(180deg,rgba(34,22,16,.94),rgba(20,12,7,.96));
+  border:1px solid var(--gold-dark);border-radius:10px;
+  box-shadow:0 10px 40px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,217,122,.07),inset 0 1px 0 rgba(255,217,122,.1);}
+.mk-panelframe::before,.mk-panelframe::after{content:'❖';position:absolute;color:var(--gold-dark);font-size:11px;opacity:.7;}
+
+/* ---- Portret ---- */
+.mk-portret{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.mk-portret.clk{cursor:pointer;}
+.mk-portret-img{border-radius:8px;overflow:hidden;border:2px solid var(--gold-dark);
+  background:#0d0805;box-shadow:0 3px 10px rgba(0,0,0,.6),inset 0 0 12px rgba(0,0,0,.5);position:relative;}
+.mk-portret.sel .mk-portret-img{border-color:var(--gold-bright);box-shadow:0 0 14px rgba(255,217,122,.45);}
+.mk-portret-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.mk-portret-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#1a0f08;}
+.mk-portret-label{font-family:var(--cinzel);font-size:11px;color:var(--gold);text-align:center;letter-spacing:.02em;}
+
+/* ---- Stat redovi ---- */
+.mk-statrow{display:flex;align-items:center;gap:8px;padding:3px 0;font-family:var(--cormorant);}
+.mk-stat-ico{display:flex;width:18px;}
+.mk-stat-label{flex:1;color:var(--text-dim);font-size:15px;}
+.mk-stat-val{font-weight:600;color:var(--parchment-bright);font-size:16px;}
+
+/* ---- HP bar ---- */
+.mk-hpbar{position:relative;width:100%;background:#0c0703;border:1px solid var(--gold-subtle);
+  border-radius:4px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.7);}
+.mk-hpbar-fill{height:100%;transition:width .5s cubic-bezier(.4,0,.2,1);box-shadow:inset 0 1px 0 rgba(255,255,255,.15);}
+.mk-hpbar-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--cormorant);font-weight:600;font-size:11px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9);}
+
+/* ---- Resurs čip ---- */
+.mk-reschips{display:flex;gap:8px;flex-wrap:wrap;}
+.mk-reschip{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.45);border:1px solid var(--gold-subtle);
+  border-radius:999px;padding:4px 11px;font-family:var(--cormorant);font-weight:600;font-size:15px;color:var(--parchment-bright);}
+
+/* =================== HUB =================== */
+.mk-hub-top{position:absolute;top:30px;left:0;right:0;text-align:center;}
+.mk-hub-top .mk-title{font-size:34px;margin:6px 0 4px;}
+.mk-hub-stats{position:absolute;left:40px;top:150px;width:250px;padding:18px;display:flex;flex-direction:column;align-items:center;}
+.mk-hub-name{font-family:var(--cinzel);font-size:18px;color:var(--gold);margin-top:8px;}
+.mk-hub-lvl{font-size:14px;color:var(--text-dim);}
+.mk-hub-stats .mk-statrow{width:100%;}
+.mk-hub-stats .mk-reschips{justify-content:center;}
+.mk-hub-actions{position:absolute;right:40px;top:150px;width:380px;display:flex;flex-direction:column;gap:12px;height:520px;}
+.mk-hub-flash{font-family:var(--cinzel);font-size:14px;color:var(--gold-bright);text-align:center;
+  text-shadow:0 0 10px rgba(255,217,122,.5);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+.mk-hubaction{position:relative;text-align:left;background:linear-gradient(180deg,rgba(42,26,10,.92),rgba(20,12,7,.95));
+  border:1px solid var(--gold-dark);border-radius:10px;padding:14px 44px 14px 18px;cursor:pointer;
+  transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 3px 12px rgba(0,0,0,.5);}
+.mk-hubaction:hover{transform:translateX(5px);border-color:var(--gold);box-shadow:0 6px 20px rgba(0,0,0,.6);}
+.mk-hubaction.glow{border-color:var(--gold-bright);box-shadow:0 0 18px rgba(255,217,122,.35);}
+.mk-hubaction-title{font-family:var(--cinzel);font-size:18px;color:var(--gold-bright);}
+.mk-hubaction-sub{font-family:var(--cormorant);font-size:14px;color:var(--text-dim);margin-top:2px;}
+.mk-hubaction-arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);color:var(--gold-dark);font-size:20px;}
+
+/* ---- Modal ---- */
+.mk-modal-backdrop{position:absolute;inset:0;background:rgba(10,6,3,.72);display:flex;align-items:center;justify-content:center;z-index:60;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;}to{opacity:1;}}
+.mk-modal{width:620px;max-height:600px;overflow:auto;background:linear-gradient(180deg,#241608,#170d05);
+  border:2px solid var(--gold-dark);border-radius:14px;padding:22px 26px;
+  box-shadow:0 24px 70px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,217,122,.08);animation:slideup .3s cubic-bezier(.4,0,.2,1);}
+.mk-modal.wide{width:760px;}
+@keyframes slideup{from{transform:translateY(16px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.mk-modal-head{display:flex;align-items:center;justify-content:space-between;}
+.mk-modal-head h2{font-family:var(--cinzel);font-size:24px;color:var(--gold);font-weight:600;}
+.mk-modal-x{background:none;border:1px solid var(--gold-subtle);color:var(--gold);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:15px;}
+.mk-modal-x:hover{color:var(--gold-bright);border-color:var(--gold);}
+.mk-dijalog{display:flex;gap:20px;align-items:flex-start;}
+.mk-dijalog-ime{font-family:var(--cinzel);font-size:20px;color:var(--gold);margin-bottom:8px;}
+.mk-dijalog-rec{font-family:var(--cormorant);font-style:italic;font-size:18px;line-height:1.55;color:var(--parchment);}
+.mk-dijalog-savet{font-family:var(--cormorant);font-size:15px;color:var(--parchment-bright);margin-top:12px;
+  border-left:3px solid var(--gold-dark);padding-left:12px;}
+.mk-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.mk-choice{text-align:left;background:rgba(42,26,10,.8);border:1px solid var(--gold-dark);border-radius:9px;padding:14px;cursor:pointer;transition:all .15s;}
+.mk-choice:hover{border-color:var(--gold);background:var(--bg-hover);transform:translateY(-2px);}
+.mk-choice.skill{border-color:var(--gold-subtle);background:rgba(74,50,16,.5);}
+.mk-choice-ime{font-family:var(--cinzel);font-size:17px;color:var(--gold-bright);}
+.mk-choice-opis{font-family:var(--cormorant);font-size:14px;color:var(--text-dim);margin-top:4px;line-height:1.4;}
+.mk-equip-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.mk-equip-slotname{font-family:var(--cinzel);font-size:13px;color:var(--gold-dark);letter-spacing:.08em;margin-bottom:6px;text-transform:uppercase;}
+.mk-equip-item{display:block;width:100%;text-align:left;background:rgba(0,0,0,.3);border:1px solid var(--gold-subtle);border-radius:8px;padding:9px 11px;margin-bottom:7px;cursor:pointer;transition:all .15s;}
+.mk-equip-item:hover:not(:disabled){border-color:var(--gold);background:var(--bg-hover);}
+.mk-equip-item.sel{border-color:var(--gold-bright);background:rgba(184,132,26,.18);}
+.mk-equip-item.locked{opacity:.45;cursor:not-allowed;}
+.mk-equip-ime{display:block;font-family:var(--cinzel);font-size:15px;color:var(--parchment-bright);}
+.mk-equip-opis{display:block;font-family:var(--cormorant);font-size:13px;color:var(--text-dim);}
+.mk-party-row{display:flex;gap:14px;flex-wrap:wrap;}
+.mk-companion{width:130px;background:rgba(0,0,0,.3);border:1px solid var(--gold-subtle);border-radius:10px;padding:12px;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.mk-companion:hover:not(.locked){border-color:var(--gold);transform:translateY(-2px);}
+.mk-companion.sel{border-color:var(--gold-bright);background:rgba(184,132,26,.15);}
+.mk-companion.locked{opacity:.4;cursor:not-allowed;}
+.mk-companion-ime{font-family:var(--cinzel);font-size:14px;color:var(--gold-bright);}
+.mk-companion-bonus{font-family:var(--cormorant);font-size:13px;color:var(--forest-bright);}
+.mk-companion-akc{font-family:var(--cormorant);font-style:italic;font-size:12px;color:var(--text-dim);}
+
+/* =================== MAPA =================== */
+.mk-map-bg{position:absolute;inset:0;background-size:cover;background-position:center;
+  filter:brightness(.42) saturate(.7) blur(1px);}
+.mk-map-scrim{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 75% at 38% 52%, rgba(10,6,3,.15), rgba(10,6,3,.82) 100%);}
+.mk-map-title{position:absolute;top:18px;left:0;right:0;text-align:center;font-family:var(--cinzel);
+  font-size:22px;color:var(--gold);letter-spacing:.04em;text-shadow:0 2px 10px rgba(0,0,0,.9);z-index:5;}
+.mk-hexwrap{position:absolute;left:16px;top:54px;width:864px;height:658px;z-index:1;}
+.mk-mapcanvas{position:absolute;left:0;top:0;pointer-events:none;
+  filter:drop-shadow(0 6px 16px rgba(0,0,0,.45));}
+.mk-hexcell{position:absolute;cursor:default;
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  transition:background .15s, box-shadow .15s;}
+.mk-hexcell.reach{cursor:pointer;background:rgba(255,236,180,.10);}
+.mk-hexcell.reach:hover{background:rgba(255,236,180,.32);box-shadow:inset 0 0 0 1.5px rgba(255,221,140,.7);}
+.mk-hexcell.here{background:rgba(130,205,255,.14);box-shadow:inset 0 0 0 1.5px rgba(150,210,255,.55);}
+.mk-poi-img{position:absolute;transform:translate(-50%,-68%);pointer-events:none;
+  filter:drop-shadow(0 4px 5px rgba(0,0,0,.6));}
+.mk-poi-coin{position:absolute;transform:translate(-50%,-58%);width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 38% 32%, #ffe9a8, #d9a531 60%, #9c6f16);
+  border:2px solid #6b4f10;box-shadow:0 3px 6px rgba(0,0,0,.6),inset 0 1px 2px rgba(255,255,255,.6);
+  pointer-events:none;animation:bobCoin 2.4s ease-in-out infinite;}
+.mk-poi-coin.silver{background:radial-gradient(circle at 38% 32%, #f2f5fa, #b9c0cb 60%, #7e8794);
+  border-color:#5a626e;}
+@keyframes bobCoin{0%,100%{transform:translate(-50%,-58%);}50%{transform:translate(-50%,-58%) translateY(-3px);}}
+.mk-poi-flag{position:absolute;transform:translate(-50%,-50%);font-size:24px;color:var(--blood-bright);
+  text-shadow:0 2px 4px rgba(0,0,0,.9);pointer-events:none;}
+.mk-poi-flag.pulse{font-size:28px;color:var(--gold-bright);animation:flagpulse 1.3s ease-in-out infinite;}
+@keyframes flagpulse{0%,100%{transform:translate(-50%,-50%) translateY(0);opacity:.85;}50%{transform:translate(-50%,-50%) translateY(-5px);opacity:1;}}
+.mk-enemy-tok.chaser{filter:drop-shadow(0 4px 6px rgba(0,0,0,.65)) drop-shadow(0 0 5px rgba(168,42,42,.7));}
+.mk-enemy-tok{position:absolute;transform:translate(-50%,-72%);
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.65));animation:bobE 2.4s ease-in-out infinite;pointer-events:none;}
+@keyframes bobE{0%,100%{transform:translate(-50%,-72%);}50%{transform:translate(-50%,-72%) translateY(-3px);}}
+.mk-marko-tok{position:absolute;width:46px;height:auto;transform:translate(-50%,-74%);
+  transition:left .2s linear, top .2s linear;filter:drop-shadow(0 4px 6px rgba(0,0,0,.7));pointer-events:none;}
+.mk-marko-tok.walk{animation:bobMarko .2s ease-in-out infinite;}
+@keyframes bobMarko{0%,100%{transform:translate(-50%,-74%);}50%{transform:translate(-50%,-74%) translateY(-3px);}}
+.mk-toast{position:absolute;left:50%;top:30px;transform:translateX(-50%);background:rgba(20,12,7,.95);
+  border:1px solid var(--gold);border-radius:8px;padding:10px 18px;font-family:var(--cinzel);font-size:15px;
+  color:var(--gold-bright);z-index:8;animation:toast 2.6s ease forwards;}
+@keyframes toast{0%{opacity:0;transform:translateX(-50%) translateY(-8px);}15%,75%{opacity:1;transform:translateX(-50%) translateY(0);}100%{opacity:0;}}
+
+.mk-map-panel{position:absolute;right:24px;top:64px;width:268px;padding:16px;z-index:20;}
+.mk-mp-head{display:flex;gap:12px;align-items:center;margin-bottom:10px;}
+.mk-mp-head .mk-hpbar{margin-top:6px;width:150px;}
+.mk-mp-stats{display:flex;flex-direction:column;}
+.mk-mp-label{font-family:var(--cinzel);font-size:12px;color:var(--gold-dark);letter-spacing:.1em;text-transform:uppercase;}
+.mk-mp-party{display:flex;gap:8px;margin-top:6px;}
+.mk-mp-objective{display:flex;gap:8px;font-family:var(--cormorant);font-size:14px;color:var(--parchment);
+  background:rgba(0,0,0,.3);border-radius:8px;padding:9px 11px;line-height:1.35;}
+.mk-mp-obj-ico{flex-shrink:0;margin-top:2px;}
+.mk-zadaci{display:flex;flex-direction:column;gap:7px;margin-top:6px;}
+.mk-zadatak{display:flex;gap:8px;align-items:flex-start;font-family:var(--cormorant);font-size:13px;
+  color:var(--text-dim);line-height:1.25;}
+.mk-zadatak.active{color:var(--parchment-bright);}
+.mk-zadatak.done{color:var(--forest-bright);}
+.mk-zad-box{flex-shrink:0;width:16px;height:16px;border:1px solid var(--gold-subtle);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--forest-bright);margin-top:1px;}
+.mk-zadatak.done .mk-zad-box{border-color:var(--forest-bright);background:rgba(106,139,74,.2);}
+.mk-zadatak.active .mk-zad-box{border-color:var(--gold-bright);color:var(--gold-bright);}
+.mk-chase-warn{margin-top:8px;font-family:var(--cinzel);font-size:13px;color:var(--blood-bright);
+  background:rgba(120,30,30,.22);border:1px solid var(--blood);border-radius:7px;padding:7px 10px;text-align:center;
+  animation:pulse 1.5s infinite;}
+.mk-mp-day{display:flex;justify-content:space-between;font-family:var(--cinzel);font-size:14px;color:var(--gold);margin-top:10px;}
+
+/* =================== BORBA =================== */
+.mk-battle-darken{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,3,.55),rgba(10,6,3,.82));}
+.mk-battle.shake{animation:shake .4s;}
+@keyframes shake{0%,100%{transform:translate(0,0);}25%{transform:translate(-5px,2px);}50%{transform:translate(4px,-2px);}75%{transform:translate(-3px,1px);}}
+.mk-battle-title{position:absolute;top:22px;left:0;right:0;text-align:center;font-family:var(--cinzel);
+  font-size:22px;color:var(--gold);letter-spacing:.05em;text-shadow:0 2px 10px rgba(0,0,0,.9);z-index:3;}
+.mk-arena{position:absolute;top:96px;left:0;right:0;height:300px;display:flex;align-items:center;justify-content:center;gap:60px;z-index:3;}
+.mk-fighter{display:flex;flex-direction:column;align-items:center;width:230px;}
+.mk-fighter img{height:230px;width:auto;filter:drop-shadow(0 8px 14px rgba(0,0,0,.7));transition:transform .2s;}
+.mk-fighter.left img{transform:scaleX(1);}
+.mk-fighter.right img{transform:scaleX(-1);}
+.mk-fighter.hit img{animation:hitflash .42s;}
+@keyframes hitflash{0%,100%{filter:drop-shadow(0 8px 14px rgba(0,0,0,.7));}40%{filter:drop-shadow(0 0 0 #fff) brightness(2.2) sepia(1) hue-rotate(-40deg) saturate(4);}}
+.mk-fighter-name{font-family:var(--cinzel);font-size:16px;color:var(--gold-bright);margin:6px 0 5px;}
+.mk-fighter .mk-hpbar{width:190px;height:15px;}
+.mk-vs{display:flex;flex-direction:column;align-items:center;}
+.mk-turn-ind{font-family:var(--cinzel);font-size:18px;color:var(--gold-bright);letter-spacing:.05em;
+  background:rgba(0,0,0,.5);border:1px solid var(--gold-dark);border-radius:999px;padding:6px 16px;}
+.mk-turn-ind.dim{color:var(--blood-bright);border-color:var(--blood);}
+.mk-battle-bottom{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);width:760px;z-index:3;}
+.mk-actions{display:flex;gap:12px;justify-content:center;}
+.mk-action{flex:1;text-align:left;background:linear-gradient(180deg,rgba(42,26,10,.95),rgba(20,12,7,.97));
+  border:1px solid var(--gold-dark);border-radius:10px;padding:13px 15px;cursor:pointer;transition:all .15s;}
+.mk-action:hover:not(:disabled){border-color:var(--gold);transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.6);}
+.mk-action:disabled{opacity:.4;cursor:not-allowed;}
+.mk-action.ally{border-color:var(--forest-bright);}
+.mk-action-ime{display:block;font-family:var(--cinzel);font-size:17px;color:var(--gold-bright);}
+.mk-action-opis{display:block;font-family:var(--cormorant);font-size:13px;color:var(--text-dim);margin-top:3px;line-height:1.3;}
+.mk-log{background:rgba(10,6,3,.6);border:1px solid var(--gold-subtle);border-radius:8px;padding:10px 14px;max-height:120px;overflow:hidden;}
+.mk-log.side{position:absolute;left:20px;top:64px;width:248px;max-height:200px;overflow:hidden;z-index:4;}
+.mk-actions-hint{text-align:center;font-family:var(--cormorant);font-style:italic;font-size:14px;
+  color:var(--gold-dark);margin-top:9px;}
+.mk-logline{font-family:var(--cormorant);font-size:14px;line-height:1.5;color:var(--parchment);opacity:.85;}
+.mk-logline.marko{color:var(--gold-bright);}
+.mk-logline.enemy{color:var(--blood-bright);}
+.mk-logline.ally{color:var(--forest-bright);}
+.mk-logline.win{color:var(--gold-bright);font-weight:600;}
+.mk-logline.sys{color:var(--text-dim);font-style:italic;}
+
+/* ---- Quiz overlay ---- */
+.mk-quiz-backdrop{position:absolute;inset:0;background:rgba(10,6,3,.55);display:flex;align-items:center;justify-content:center;z-index:20;animation:fadein .25s;}
+.mk-quiz{width:840px;background:rgba(26,15,8,.97);border:3px solid var(--gold);border-radius:14px;padding:26px 32px;
+  box-shadow:0 24px 80px rgba(0,0,0,.85),inset 0 0 0 1px rgba(255,217,122,.1);animation:slideup .4s cubic-bezier(.4,0,.2,1);}
+.mk-quiz-head{display:flex;justify-content:space-between;align-items:center;}
+.mk-quiz-tag{font-family:var(--cinzel);font-size:17px;font-weight:600;color:var(--gold);letter-spacing:.05em;}
+.mk-quiz-timer{font-family:var(--cormorant);font-weight:700;font-size:24px;color:var(--parchment-bright);}
+.mk-quiz-timer.danger{color:var(--blood-bright);animation:pulse .5s infinite;}
+.mk-quiz-learned{font-family:var(--cinzel);color:var(--forest-bright);font-size:16px;}
+.mk-quiz-timerbar{height:4px;background:rgba(0,0,0,.5);border-radius:2px;margin-top:10px;overflow:hidden;}
+.mk-quiz-timerbar>div{height:100%;background:var(--gold-bright);transition:width 1s linear;}
+.mk-quiz-q{font-family:var(--cormorant);font-style:italic;font-size:23px;color:var(--parchment-bright);
+  line-height:1.4;margin:16px 0 18px;text-wrap:pretty;}
+.mk-quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.mk-quiz-opt{display:flex;align-items:center;gap:12px;text-align:left;background:rgba(0,0,0,.35);
+  border:1px solid var(--gold-subtle);border-radius:9px;padding:12px 15px;cursor:pointer;
+  font-family:var(--cormorant);font-size:18px;color:var(--parchment);transition:all .15s;}
+.mk-quiz-opt:hover:not(:disabled){background:#3a2410;color:var(--gold-bright);border-color:var(--gold);}
+.mk-quiz-opt:disabled{cursor:default;}
+.mk-quiz-opt.correct{background:var(--forest);border-color:var(--forest-bright);color:#fff;}
+.mk-quiz-opt.wrong{background:var(--blood);border-color:var(--blood-bright);color:#fff;}
+.mk-quiz-letter{font-family:var(--cinzel);font-weight:700;color:var(--gold);width:22px;flex-shrink:0;}
+.mk-quiz-opt.correct .mk-quiz-letter,.mk-quiz-opt.wrong .mk-quiz-letter{color:#fff;}
+.mk-quiz-expl{display:flex;gap:10px;margin-top:16px;background:rgba(0,0,0,.35);border-left:3px solid var(--gold);
+  border-radius:6px;padding:12px 14px;font-family:var(--cormorant);font-style:italic;font-size:15px;
+  color:var(--gold-bright);line-height:1.45;animation:fadein .3s;}
+.mk-quiz-expl b.ok{color:var(--forest-bright);font-style:normal;}
+.mk-quiz-expl b.no{color:var(--blood-bright);font-style:normal;}
+.mk-quiz-expl-ico{font-size:18px;}
+
+/* ---- Result ---- */
+.mk-result-backdrop{position:absolute;inset:0;background:rgba(10,6,3,.8);display:flex;align-items:center;justify-content:center;z-index:30;animation:fadein .3s;}
+.mk-result{width:540px;text-align:center;background:linear-gradient(180deg,#241608,#150c05);
+  border:2px solid var(--gold);border-radius:16px;padding:34px;box-shadow:0 30px 90px rgba(0,0,0,.85);animation:slideup .4s;}
+.mk-result h2{font-family:var(--cinzel);font-size:38px;letter-spacing:.06em;}
+.mk-result h2.win{color:var(--gold-bright);text-shadow:0 0 24px rgba(255,217,122,.5);}
+.mk-result h2.lose{color:var(--blood-bright);}
+.mk-result p{font-family:var(--cormorant);font-size:18px;color:var(--parchment);margin:6px 0 18px;line-height:1.5;}
+
+/* =================== HEROJ =================== */
+.mk-hero-head{position:absolute;top:24px;left:40px;right:40px;display:flex;align-items:center;justify-content:space-between;}
+.mk-hero-head .mk-title{flex:1;text-align:center;}
+.mk-hero-xp{font-family:var(--cinzel);color:var(--gold);font-size:16px;}
+.mk-hero-grid{position:absolute;top:90px;left:40px;right:40px;bottom:30px;display:grid;grid-template-columns:340px 1fr;gap:20px;}
+.mk-hero-col{padding:18px 20px;overflow:auto;}
+.mk-hero-marko{display:flex;justify-content:center;}
+.mk-attr{display:flex;align-items:center;gap:10px;padding:5px 0;}
+.mk-attr-ico{width:20px;display:flex;}
+.mk-attr-label{flex:1;font-family:var(--cormorant);font-size:16px;color:var(--text-dim);}
+.mk-attr-val{font-family:var(--cinzel);font-size:18px;color:var(--parchment-bright);}
+.mk-attr-bonus{font-family:var(--cormorant);font-style:normal;font-size:14px;color:var(--forest-bright);}
+.mk-inv-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mk-inv-slot{background:rgba(0,0,0,.3);border:1px solid var(--gold-subtle);border-radius:8px;padding:8px 10px;}
+.mk-inv-slot.generic{border-style:dashed;opacity:.7;}
+.mk-inv-slotname{font-family:var(--cinzel);font-size:11px;color:var(--gold-dark);letter-spacing:.06em;text-transform:uppercase;}
+.mk-inv-itemname{font-family:var(--cormorant);font-size:15px;color:var(--parchment-bright);}
+.mk-inv-itemname.dim{color:var(--text-disabled);}
+.mk-skilltree{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.mk-branch-head{font-family:var(--cinzel);font-size:15px;color:var(--gold-bright);letter-spacing:.05em;
+  display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--gold-subtle);}
+.mk-skill{background:rgba(0,0,0,.28);border:1px solid var(--gold-subtle);border-radius:8px;padding:9px 11px;margin-bottom:9px;}
+.mk-skill.owned{border-color:var(--gold-dark);background:rgba(184,132,26,.12);}
+.mk-skill.locked{opacity:.55;}
+.mk-skill-ime{font-family:var(--cinzel);font-size:14px;color:var(--parchment-bright);display:flex;justify-content:space-between;gap:6px;}
+.mk-skill.owned .mk-skill-ime{color:var(--gold-bright);}
+.mk-skill-cena{font-family:var(--cormorant);font-size:12px;color:var(--text-dim);font-weight:400;}
+.mk-skill-opis{font-family:var(--cormorant);font-size:13px;color:var(--text-dim);line-height:1.35;margin-top:3px;}
+
+/* ---- Tweaks: atmosfera (doba dana) + ton sveta ---- */
+.mk-daylight{position:absolute;inset:0;pointer-events:none;z-index:12;
+  transition:background .5s ease;background:transparent;}
+#canvas[data-doba="zora"] .mk-daylight{mix-blend-mode:soft-light;
+  background:linear-gradient(165deg, rgba(255,196,150,.30), rgba(255,150,120,.14) 55%, rgba(150,120,180,.20));}
+#canvas[data-doba="dan"] .mk-daylight{background:transparent;}
+#canvas[data-doba="sumrak"] .mk-daylight{mix-blend-mode:soft-light;
+  background:linear-gradient(170deg, rgba(255,138,52,.30), rgba(180,68,44,.22) 52%, rgba(48,34,86,.40));}
+#canvas[data-doba="noc"] .mk-daylight{
+  background:linear-gradient(180deg, rgba(28,40,98,.40), rgba(9,14,44,.54));}
+#canvas[data-ton="vizantija"]{filter:saturate(1.26) contrast(1.05) sepia(.13) hue-rotate(-7deg);}
+#canvas[data-ton="celik"]{filter:saturate(.80) brightness(1.05) hue-rotate(16deg);}
+
+/* ---- Top control bar ---- */
+.mk-topbar{position:absolute;top:12px;right:16px;z-index:50;display:flex;gap:8px;}
+.mk-script-toggle{font-family:var(--cinzel);font-size:13px;background:rgba(10,6,3,.7);border:1px solid var(--gold-dark);
+  border-radius:999px;overflow:hidden;display:flex;}
+.mk-script-toggle button{font-family:var(--cinzel);background:none;border:none;color:var(--text-dim);padding:5px 12px;cursor:pointer;font-size:13px;}
+.mk-script-toggle button.on{background:var(--gold-dark);color:var(--parchment-bright);}
+</style>
+</head>
+<body>
+<div id="stage"><div id="canvas"></div></div>
+<div id="tweaks-root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="marko/data.js"></script>
+<script type="text/babel" src="marko/components.jsx"></script>
+<script type="text/babel" src="marko/screens_hub.jsx"></script>
+<script type="text/babel" src="marko/screens_map.jsx"></script>
+<script type="text/babel" src="marko/screens_battle.jsx"></script>
+<script type="text/babel" src="marko/screens_hero.jsx"></script>
+<script type="text/babel" src="marko/tweaks-panel.jsx"></script>
+<script type="text/babel">
+const { useReducer } = React;
+
+/* ---------- Centralni game state ---------- */
+function effMax(s){ return window.mkEff(s,'maxHp'); }
+
+function initState(){
+  const { MARKO_START } = window.MK;
+  const s = {
+    scene:'hub', level:1,
+    marko:{...MARKO_START},
+    resources:{ dinari:0, dukati:0, hrana:5, znanjeRes:3 },
+    reputation:{ narodna:0, carska:0 },
+    skills:['buzdovan','sablja'],
+    equipped:{ weapon:'drveni', armor:'dolama', kalpak:'samur', mount:'sarac' },
+    generic:['Ralo i volovi', null, null, null],
+    party:['jevrosima'], partySlots:3,
+    unlockedCompanions:['jevrosima'],
+    learned:[],
+    levelUpReady:false,
+    map:{ started:false, pos:{c:5,r:1}, moveLeft:6, day:1, cleared:[],
+          quest:'toStala', carry:{blago:false,ralo:false,dinari:false}, chasers:[], asked:[] },
+    battle:null,
+    script:'lat',
+  };
+  // Počni sa PUNIM efektivnim zdravljem (uključuje bonus saputnika), pa hub pokaže 55/55 a ne 50/55.
+  s.marko = {...s.marko, hp: effMax(s)};
+  return s;
+}
+
+function reducer(s, a){
+  const { LEVELS, LEVELUP_CHOICES, EQUIPMENT } = window.MK;
+  switch(a.type){
+    case 'SCENE': return {...s, scene:a.scene};
+    case 'TOGGLE_SCRIPT':{
+      const sc = s.script==='lat'?'cyr':'lat'; window.__mkScript=sc; return {...s, script:sc};
+    }
+    case 'START_LEVEL':{
+      const start=LEVELS[s.level].poi.start;
+      const ns={...s, scene:'map',
+        map:{ started:true, pos:{c:start.c,r:start.r}, moveLeft:6, day:1, cleared:[],
+              quest:'toStala', carry:{blago:false,ralo:false,dinari:false}, chasers:[], asked:[] }};
+      ns.marko={...ns.marko, hp:effMax(ns)};
+      return ns;
+    }
+    case 'MOVE':
+      return {...s, map:{...s.map, pos:a.dest, moveLeft:Math.max(0,s.map.moveLeft-a.cost)}};
+    case 'MOVE_CHASERS':
+      return {...s, map:{...s.map, chasers:a.chasers}};
+    case 'MARK_ASKED':
+      return {...s, map:{...s.map, asked:[...(s.map.asked||[]), a.id]}};
+    case 'RESET_ASKED':
+      return {...s, map:{...s.map, asked:a.keep?[a.keep]:[]}};
+    case 'PICK_RALO':{
+      // Verno pesmi: Marko prvo uzme ralo, pa ralom navali na janjičara (još bez potere).
+      return {...s, map:{...s.map, carry:{...s.map.carry, ralo:true}, quest:'toEnemy',
+        cleared:[...s.map.cleared, 'cilj']}};
+    }
+    case 'END_TURN':
+      return {...s, map:{...s.map, day:s.map.day+1, moveLeft:6}};
+    case 'COLLECT':{
+      const carry = a.poi==='blago' ? {...s.map.carry, dinari:true} : s.map.carry;
+      const quest = a.poi==='blago' ? 'toDvor' : s.map.quest;
+      return {...s, resources:{...s.resources,
+          dinari:s.resources.dinari+(a.dinari||0),
+          dukati:s.resources.dukati+(a.dukati||0),
+          hrana:Math.min(30,s.resources.hrana+(a.hrana||0))},
+        map:{...s.map, cleared:[...s.map.cleared, a.poi], carry, quest}};
+    }
+    case 'START_BATTLE':
+      return {...s, scene:'battle', battle:{ enemy:a.enemy, poi:a.poi, chaserId:a.chaserId||null }};
+    case 'BATTLE_END':{
+      const spawns = LEVELS[s.level].chaserSpawns||[];
+      let carry={...s.map.carry}, quest=s.map.quest, cleared=s.map.cleared, chasers=s.map.chasers;
+      if(a.result==='win'){
+        if(a.poi==='enemy'){ carry.blago=true; quest='toDinari'; cleared=[...cleared,'enemy'];
+          // Marko obori janjičara i uze blago → dva goniča kreću u poteru
+          chasers = spawns.map((p,i)=>({id:'gonic'+i, c:p.c, r:p.r})); }
+        if(a.chaserId){ chasers = chasers.filter(c=>c.id!==a.chaserId); }
+      } else if(a.chaserId){
+        const idx = parseInt(a.chaserId.replace('gonic',''),10);
+        const sp = spawns[idx];
+        if(sp) chasers = chasers.map(c=> c.id===a.chaserId ? {...c, c:sp.c, r:sp.r} : c);
+      }
+      const marko = a.result==='win'
+        ? {...s.marko, hp:a.markoHp, xp:s.marko.xp+(a.xpGain||0)}
+        : {...s.marko, hp:a.markoHp};
+      const res = a.result==='win'
+        ? {...s.resources,
+            dinari:s.resources.dinari+(a.dinari||0),
+            dukati:s.resources.dukati+(a.dukati||0),
+            hrana:Math.min(30,s.resources.hrana+(a.hrana||0))}
+        : s.resources;
+      return {...s, scene:'map', battle:null, marko, resources:res,
+        learned:Array.from(new Set([...(s.learned), ...(a.learned||[])])),
+        map:{...s.map, carry, quest, cleared, chasers}};
+    }
+    case 'LEVEL_COMPLETE':
+      return {...s, scene:'hub', levelUpReady:true, map:{...s.map, started:false}};
+    case 'LEVELUP':{
+      const ch=LEVELUP_CHOICES.find(c=>c.id===a.choice);
+      const patch=ch.apply(s.marko);
+      // prvi level-up otključava nove saputnike (slot 2/3 demo)
+      const unlocked = Array.from(new Set([...s.unlockedCompanions,'relja','milos']));
+      return {...s, marko:{...s.marko, ...patch, level:s.marko.level+1},
+        levelUpReady:false, unlockedCompanions:unlocked};
+    }
+    case 'UNLOCK_SKILL':{
+      const unlocked = Array.from(new Set([...s.unlockedCompanions,'relja','milos']));
+      return {...s, skills:[...s.skills, a.id], levelUpReady:false,
+        marko:{...s.marko, level:s.marko.level+1}, unlockedCompanions:unlocked};
+    }
+    case 'EQUIP':{
+      const it=(EQUIPMENT[a.slot]||[]).find(x=>x.id===a.id);
+      if(!it || it.zakljucan) return s;
+      return {...s, equipped:{...s.equipped, [a.slot]:a.id}};
+    }
+    case 'TOGGLE_PARTY':{
+      const has=s.party.includes(a.id);
+      if(has) return {...s, party:s.party.filter(x=>x!==a.id)};
+      if(s.party.length>=s.partySlots) return s;
+      return {...s, party:[...s.party, a.id]};
+    }
+    default: return s;
+  }
+}
+
+function App(){
+  const [state, dispatch] = useReducer(reducer, null, initState);
+  let Scene=null;
+  if(state.scene==='hub') Scene=window.Hub;
+  else if(state.scene==='map') Scene=window.HexMap;
+  else if(state.scene==='battle') Scene=window.Battle;
+  else if(state.scene==='hero') Scene=window.Hero;
+  return (
+    <React.Fragment>
+      <Scene state={state} dispatch={dispatch}/>
+      <div className="mk-daylight"/>
+      <div className="mk-topbar">
+        <div className="mk-script-toggle">
+          <button className={state.script==='lat'?'on':''} onClick={()=>state.script!=='lat'&&dispatch({type:'TOGGLE_SCRIPT'})}>Lat</button>
+          <button className={state.script==='cyr'?'on':''} onClick={()=>state.script!=='cyr'&&dispatch({type:'TOGGLE_SCRIPT'})}>Ћир</button>
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('canvas')).render(<App/>);
+
+/* ---------- TWEAKS — ekspresivne kontrole koje menjaju OSEĆAJ igre ---------- */
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "doba": "dan",
+  "ton": "pergament",
+  "tempo": "junacki"
+}/*EDITMODE-END*/;
+
+const TEMPO_CFG = {
+  spokojno: { timer:16, dmg:0.65 },
+  junacki:  { timer:11, dmg:1.0 },
+  krvavo:   { timer:7,  dmg:1.45 },
+};
+window.MKTWEAKS = { tempo: TEMPO_CFG.junacki };
+
+function applyTweaks(t){
+  const cv=document.getElementById('canvas');
+  cv.setAttribute('data-doba', t.doba||'dan');
+  cv.setAttribute('data-ton', t.ton||'pergament');
+  window.MKTWEAKS.tempo = TEMPO_CFG[t.tempo] || TEMPO_CFG.junacki;
+}
+
+function TweaksRoot(){
+  const [t,setTweak]=window.useTweaks(TWEAK_DEFAULTS);
+  React.useEffect(()=>{ applyTweaks(t); }, [t.doba, t.ton, t.tempo]);
+  const { TweaksPanel, TweakSection, TweakRadio, TweakSelect } = window;
+  return (
+    <TweaksPanel title="Tweaks — Epska Saga">
+      <TweakSection label="Atmosfera"/>
+      <TweakSelect label="Doba dana" value={t.doba}
+        options={[{value:'zora',label:'Zora'},{value:'dan',label:'Dan'},{value:'sumrak',label:'Sumrak'},{value:'noc',label:'Noć'}]}
+        onChange={v=>setTweak('doba',v)}/>
+      <TweakRadio label="Ton sveta" value={t.ton}
+        options={[{value:'pergament',label:'Pergament'},{value:'vizantija',label:'Vizantija'},{value:'celik',label:'Čelik'}]}
+        onChange={v=>setTweak('ton',v)}/>
+      <TweakSection label="Borba"/>
+      <TweakRadio label="Tempo borbe" value={t.tempo}
+        options={[{value:'spokojno',label:'Spokojno'},{value:'junacki',label:'Junački'},{value:'krvavo',label:'Krvavo'}]}
+        onChange={v=>setTweak('tempo',v)}/>
+    </TweaksPanel>
+  );
+}
+ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<TweaksRoot/>);
+
+/* ---------- FIT skaliranje ---------- */
+function fit(){
+  const s=Math.min(window.innerWidth/1280, window.innerHeight/720);
+  document.getElementById('canvas').style.transform=`scale(${s})`;
+}
+window.addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>
