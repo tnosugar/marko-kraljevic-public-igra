@@ -5,6 +5,10 @@ Ovo je **igriva verzija** prve pesme — *Oranje Marka Kraljevića*.
 
 ▶️ **Igraj online:** https://tnosugar.github.io/marko-kraljevic-public-igra/
 
+> ⚙️ Ovaj repo je **automatski sinhronizovan** iz privatnog izvora
+> (`tnosugar/marko-kraljevic-private`). Ne menjaj ga direktno — izmene se rade u
+> privatnom repou i workflow ih prenosi ovamo.
+
 ## O igri
 
 Marko prolazi kroz avanturu na HoMM-inspirisanoj mapi i bori se sa turskim
