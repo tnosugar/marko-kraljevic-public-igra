@@ -421,7 +421,10 @@ function HexMap({ state, dispatch }){
             style={{left:c.x, top:c.y, width:36, zIndex:Math.round(c.y)+2}} draggable="false"/>; })}
         <img src={ART.marko} alt="Marko" className={`mk-marko-tok ${moving?'walk':''}`}
           style={{ left: tokenXY.x, top: tokenXY.y, zIndex:Math.round(tokenXY.y)+6 }} draggable="false"/>
-        {toast && <div className="mk-toast" onAnimationEnd={()=>setToast(null)}>{T(toast)}</div>}
+        {toast && <div className="mk-toast" onAnimationEnd={()=>setToast(null)}>
+          {/ralo/i.test(toast) && ART.icon && <span className="mk-toast-ico" style={{backgroundImage:`url(${ART.icon.ralo})`}}/>}
+          <span>{T(toast)}</span>
+        </div>}
       </div>
 
       <MapPanel state={state} dispatch={dispatch} onEndTurn={endTurn}/>

@@ -197,9 +197,13 @@ function Battle({ state, dispatch }){
           <div className="mk-actions">
             {ACTIONS.filter(a=> a.id!=='ralo' || (state.map.carry && state.map.carry.ralo)).map(a=>{
               const dis = a.id==='doziv' && dozivAbil.length===0;
+              const ico = ART.icon && ART.icon[a.id];
               return <button key={a.id} className="mk-action" disabled={dis} onClick={()=>doAction(a)}>
-                <span className="mk-action-ime">{T(a.ime)}</span>
-                <span className="mk-action-opis">{T(a.opis)}</span>
+                {ico && <span className="mk-action-ico" style={{backgroundImage:`url(${ico})`}}/>}
+                <span className="mk-action-txt">
+                  <span className="mk-action-ime">{T(a.ime)}</span>
+                  <span className="mk-action-opis">{T(a.opis)}</span>
+                </span>
               </button>;
             })}
           </div>}

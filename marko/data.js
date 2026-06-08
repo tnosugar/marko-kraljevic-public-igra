@@ -48,6 +48,12 @@ const ART = {
     kamen:   'marko/art/kamen_grupa.png',
     kamen1:  'marko/art/kamen_mossy.png',
   },
+  // Ikone oružja/oruđa (medaljoni) — borba + notifikacije
+  icon: {
+    buzdovan: 'marko/art/icons/buzdovan.png',
+    sablja:   'marko/art/icons/sablja.png',
+    ralo:     'marko/art/icons/ralo.png',
+  },
 };
 
 /* ---- Tereni ---- */
