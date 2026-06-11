@@ -467,8 +467,10 @@ function reducer(s, a){
         learned:Array.from(new Set([...(s.learned), ...(a.learned||[])])),
         map:{...s.map, done, chasers}};
     }
-    case 'LEVEL_COMPLETE':
-      return {...s, scene:'hub', levelUpReady:true, map:{...s.map, started:false}};
+    case 'LEVEL_COMPLETE':{
+      const next = LEVELS[s.level+1] ? s.level+1 : s.level;   // pređi na sledeću pesmu ako postoji
+      return {...s, scene:'hub', levelUpReady:true, level:next, map:{...s.map, started:false}};
+    }
     case 'LEVELUP':{
       const ch=LEVELUP_CHOICES.find(c=>c.id===a.choice);
       const patch=ch.apply(s.marko);

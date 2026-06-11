@@ -386,11 +386,10 @@ function HexMap({ state, dispatch }){
 
         {/* ——— ARTEFAKTI I LIKOVI (sortirani po Y) ——— */}
         {Object.entries(level.poi).map(([kind,p])=>{
+          if(!p.building) return null;
+          const href=ART.obj[p.building]; if(!href) return null;
           const {x,y}=hexCenter(p.c,p.r);
-          let href=null, w=58;
-          if(p.tip==='dvor'){ href=ART.obj.dvor; w=104; }
-          else if(p.tip==='cilj'){ href=ART.obj.stala; w=88; }
-          else return null;
+          const w = p.w || (p.building==='dvor'?104:88);
           return <img key={kind} src={href} className="mk-poi-img" alt=""
             style={{left:x, top:y, width:w, zIndex:Math.round(y)}} draggable="false"/>;
         })}
@@ -400,10 +399,11 @@ function HexMap({ state, dispatch }){
         {objTarget && (()=>{ const c=hexCenter(objTarget.c,objTarget.r);
           return <div className="mk-poi-flag pulse" style={{left:c.x, top:c.y-30, zIndex:99990}}>⚑</div>; })()}
         {objectives.filter(o=>o.kind==='battle' && !isDone(o.id)).map(o=>{ const p=level.poi[o.poi]; const c=hexCenter(p.c,p.r);
-          return <img key={o.id} src={ART.janjicar} className="mk-enemy-tok" alt=""
-            style={{left:c.x, top:c.y, width:40, zIndex:Math.round(c.y)+2}} draggable="false"/>; })}
-        {chasers.map(ch=>{ const c=hexCenter(ch.c,ch.r);
-          return <img key={ch.id} src={ART.janjicar} className="mk-enemy-tok chaser" alt=""
+          const ed=ENEMIES[o.enemy]||{}; const eart=ART[ed.art]||ART.janjicar; const ew=ed.art==='mustafaga'?54:40;
+          return <img key={o.id} src={eart} className="mk-enemy-tok" alt=""
+            style={{left:c.x, top:c.y, width:ew, zIndex:Math.round(c.y)+2}} draggable="false"/>; })}
+        {chasers.map(ch=>{ const c=hexCenter(ch.c,ch.r); const eart=ART[(ENEMIES[(level.pursuit||{}).enemy]||{}).art]||ART.janjicar;
+          return <img key={ch.id} src={eart} className="mk-enemy-tok chaser" alt=""
             style={{left:c.x, top:c.y, width:36, zIndex:Math.round(c.y)+2}} draggable="false"/>; })}
         <img src={ART.marko} alt="Marko" className={`mk-marko-tok ${moving?'walk':''}`}
           style={{ left: tokenXY.x, top: tokenXY.y, zIndex:Math.round(tokenXY.y)+6 }} draggable="false"/>
@@ -416,24 +416,22 @@ function HexMap({ state, dispatch }){
       <MapPanel state={state} dispatch={dispatch} onEndTurn={endTurn}/>
 
       {/* ——— OUTRO: Marko predaje blago majci (kraj prve pesme) ——— */}
-      {outro && <div className="mk-result-backdrop">
+      {outro && (()=>{ const O=level.outro||{}; return <div className="mk-result-backdrop">
         <div className="mk-result" style={{width:620}}>
-          <div className="mk-eyebrow">{T('KRAJ PRVE PESME · ORANJE MARKA KRALJEVIĆA')}</div>
-          <h2 className="win" style={{fontSize:32,marginTop:6}}>{T('Nivo završen')}</h2>
+          <div className="mk-eyebrow">{T(O.eyebrow||'')}</div>
+          <h2 className="win" style={{fontSize:32,marginTop:6}}>{T(O.title||'Nivo završen')}</h2>
           <Divider/>
           <div className="mk-dijalog" style={{alignItems:'center',textAlign:'left',margin:'4px 0 10px'}}>
-            <Portrait src={ART.portret_jevrosima} size={80}/>
+            {O.portrait && <Portrait src={ART[O.portrait]} size={80}/>}
             <div>
-              <div className="mk-dijalog-ime">{T('Marko — staroj majci Jevrosimi')}</div>
-              <p className="mk-dijalog-rec">{T('„Evo ti, majko, tri tovara blaga. To sam za tebe danas izorao!“')}</p>
+              <div className="mk-dijalog-ime">{T(O.speaker||'')}</div>
+              <p className="mk-dijalog-rec">{T(O.line||'')}</p>
             </div>
           </div>
-          <p className="mk-muted" style={{fontSize:15,marginBottom:6}}>
-            {T('Marko spušta pred majku oteto blago')}: <b style={{color:'var(--gold-bright)'}}>{state.resources.dukati} {T(CURRENCY.dukat.mn)}</b> {T('i')} <b style={{color:'var(--silver-bright)'}}>{state.resources.dinari} {T(CURRENCY.dinar.mn)}</b>.
-          </p>
+          <p className="mk-muted" style={{fontSize:15,marginBottom:6}}>{T(O.summary||'')}</p>
           <Btn variant="confirm" size="lg" onClick={()=>dispatch({type:'LEVEL_COMPLETE'})}>{T('Nastavi u dvor')} ▸</Btn>
         </div>
-      </div>}
+      </div>; })()}
     </div>
   );
 }

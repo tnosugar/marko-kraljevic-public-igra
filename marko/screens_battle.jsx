@@ -4,14 +4,14 @@
 const OPT_LABELS = ['A','B','V','G'];
 
 function Battle({ state, dispatch }){
-  const { ART, ENEMIES, QUESTIONS, ACTIONS, COMPANIONS } = window.MK;
+  const { ART, ENEMIES, QUESTIONS, ACTIONS, COMPANIONS, LEVELS } = window.MK;
   const enemyDef = ENEMIES[state.battle.enemy];
   const pool = QUESTIONS[state.level];
 
   const [enemy, setEnemy] = useState({ ...enemyDef });
   const [markoHp, setMarkoHp] = useState(state.marko.hp);
   const [turn, setTurn] = useState('marko');      // marko | enemy | over
-  const [log, setLog] = useState([{t:`Susret: ${enemyDef.ime} preprečuje carev drum.`, k:'sys'}]);
+  const [log, setLog] = useState([{t:`Susret: ${enemyDef.ime} stade pred Marka.`, k:'sys'}]);
   const [question, setQuestion] = useState(null);
   const [answered, setAnswered] = useState(null);  // {pick, correct}
   const [timeLeft, setTimeLeft] = useState(0);
@@ -185,7 +185,7 @@ function Battle({ state, dispatch }){
             : <span className="mk-turn-ind dim">{T('Protivnik')}</span>}
         </div>
         <div className={`mk-fighter right ${flash==='hit-enemy'?'hit':''}`}>
-          <img src={ART.janjicar} alt="Janjičar"/>
+          <img src={ART[enemyDef.art]||ART.janjicar} alt={T(enemyDef.ime)}/>
           <div className="mk-fighter-name">{T(enemy.ime)}</div>
           <HPBar cur={enemy.hp} max={enemy.maxHp} color="var(--blood-bright)"/>
         </div>
@@ -238,7 +238,7 @@ function Battle({ state, dispatch }){
                 ? (()=>{ const ostalo=(state.map.chasers||[]).filter(c=>c.id!==state.battle.chaserId).length;
                     return <p>{T('Marko obori goniča! +150 mletačkih dukata, +10 XP.')}{' '}
                       {ostalo>0 ? T('Potera se nastavlja — ne staj!') : T('Potera je slomljena — put je slobodan.')}</p>; })()
-                : <p>{T('Marko pobi janjičara ralom i volovima. Tri ćemera blaga — 900 mletačkih dukata (zlatnika) — i 20 XP. (Srbija 1371. kuje srebrni dinar; zlato je mletačko, za velike transakcije.)')}</p>)
+                : <p>{T((LEVELS[state.level].objectives.find(o=>o.id===state.battle.objId)||{}).winText || 'Pobeda! Protivnik je savladan.')}</p>)
             : <p>{T('Majka Jevrosima te vraća u dvor. Probaj ponovo — Marko uči iz svake borbe.')}</p>}
           <Btn variant="confirm" size="lg" onClick={finish}>{T('Nastavi')} ▸</Btn>
         </div>

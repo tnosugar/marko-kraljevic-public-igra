@@ -15,6 +15,7 @@ const ART = {
   janjicar: 'assets/janjicar_cut.png',
   sarac: 'assets/sarac_cut.png',
   jevrosima: 'assets/jevrosima_cut.png',
+  mustafaga: 'marko/art/mustafaga.png',
   portret_marko: 'uploads/sprites/portraits/marko_portret_256.png',
   portret_jevrosima: 'uploads/sprites/portraits/jevrosima_portret_256.png',
   tile: {
@@ -134,6 +135,8 @@ const EQUIPMENT = {
 const ENEMIES = {
   janjicar: { id:'janjicar', ime:'Turčin janjičar', art:'janjicar', hp:30, maxHp:30, atk:8, def:4, nivo:1 },
   gonic:    { id:'gonic', ime:'Janjičar gonič', art:'janjicar', hp:24, maxHp:24, atk:10, def:3, nivo:1 },
+  straza:   { id:'straza', ime:'Mustaf-agina straža', art:'janjicar', hp:30, maxHp:30, atk:9, def:4, nivo:2 },
+  mustafaga:{ id:'mustafaga', ime:'Mustaf-aga', art:'mustafaga', hp:48, maxHp:48, atk:11, def:6, nivo:2 },
 };
 
 /* ---- Level-up izbori ---- */
@@ -216,6 +219,68 @@ const QUESTIONS = {
       opcije:['Kao kukavica i lenjivac','Prkosan i snažan, odan majci ali nepokoran','Kao bogat trgovac','Tih i potpuno pokoran'], tacan:1,
       obrazlozenje:'Marko poštuje majku, ali rešava silom i prkosom — tipičan epski junak protivrečne naravi.' },
   ],
+  2: [
+    { id:'q01', tezina:'lako', pitanje:'Ko rano izlazi da beli platno na Marici?',
+      opcije:['Markova majka','Turkinja đevojka','Vila','Carica'], tacan:1,
+      obrazlozenje:'„Rano rani Turkinja đevojka… na Maricu bijeliti platno.“' },
+    { id:'q02', tezina:'lako', pitanje:'Šta se desilo s vodom Marice „od sunca“?',
+      opcije:['Presušila je','Zamutila se i postala krvava','Smrzla se','Postala bistra'], tacan:1,
+      obrazlozenje:'„Od sunca se voda zamutila, udarila mutna i krvava.“ — posle bitke na Marici.' },
+    { id:'q03', tezina:'lako', pitanje:'Šta voda Marica nosi niz maticu?',
+      opcije:['Cveće i granje','Konje, kalpake i ranjene junake','Lađe','Ribu'], tacan:1,
+      obrazlozenje:'„Pa pronosi konje i kalpake, ispred podne ranjene junake.“' },
+    { id:'q04', tezina:'lako', pitanje:'Kako ranjeni junak oslovljava devojku?',
+      opcije:['„Gospo“','„Bogom sestro“','„Carice“','„Majko“'], tacan:1,
+      obrazlozenje:'„Bogom sestro, lijepa đevojko, izvadi me iz vode Marice.“' },
+    { id:'q05', tezina:'srednje', pitanje:'Koliko rana ima na junaku?',
+      opcije:['Tri','Sedam','Sedamnaest','Sto'], tacan:2,
+      obrazlozenje:'„Na junaku rana sedamnaest.“' },
+    { id:'q06', tezina:'srednje', pitanje:'Šta je posebno na junakovoj sablji?',
+      opcije:['Srebrne kanije','Tri zlatna balčaka i tri draga kamena','Natpis na arapskom','Drveni balčak'], tacan:1,
+      obrazlozenje:'„Na sablji su tri balčaka zlatna, u balčacim’ tri kamena draga.“' },
+    { id:'q07', tezina:'srednje', pitanje:'Kolika je vrednost te sablje?',
+      opcije:['Jedan grad','Tri careva grada','Sto dukata','Jedno selo'], tacan:1,
+      obrazlozenje:'„Valja sablja tri careva grada!“ — simbol kraljevskog dostojanstva.' },
+    { id:'q08', tezina:'srednje', pitanje:'Ko ubije ranjenog junaka i zbog čega?',
+      opcije:['Devojka, iz straha','Mustaf-aga, zbog sablje','Car, zbog izdaje','Niko, junak preživi'], tacan:1,
+      obrazlozenje:'Mustaf-aga, devojčin brat, vidi skupocenu sablju i odseče junaku glavu da je uzme.' },
+    { id:'q09', tezina:'srednje', pitanje:'Šta sestra uradi bratu posle ubistva?',
+      opcije:['Nagradi ga','Prokune ga','Sakrije sablju','Ode caru'], tacan:1,
+      obrazlozenje:'Sestra ga kune zbog nedela nad nemoćnim ranjenikom.' },
+    { id:'q10', tezina:'srednje', pitanje:'Šta poziva Mustaf-agu na carevu vojsku?',
+      opcije:['Glas o Marku','Ferman (zapovest) od cara','San','Pismo sestre'], tacan:1,
+      obrazlozenje:'„Dođe ferman od cara turskoga Mustaf-agi, da ide na vojsku.“' },
+    { id:'q11', tezina:'srednje', pitanje:'Šta niko ne može da uradi sa sabljom na smotri?',
+      opcije:['Da je proda','Da je izvadi iz korica','Da je očisti','Da je podigne'], tacan:1,
+      obrazlozenje:'Sablju niko ne može izvaditi — a Marku se sama izvadi iz korica.' },
+    { id:'q12', tezina:'tesko', pitanje:'Koja tri imena Marko prepoznaje urezana na sablji?',
+      opcije:['Lazar, Miloš, Marko','Novak kovač, Vukašin kralj, Kraljević Marko','Uroš, Vukašin, Andrijaš','Murat, Bajazit, Marko'], tacan:1,
+      obrazlozenje:'Tri slova/imena: Novak kovač (kovač), Vukašin kralj (otac), Kraljević Marko — sablja kao rodoslov.' },
+    { id:'q13', tezina:'tesko', pitanje:'Čija je sablja zapravo?',
+      opcije:['Carska','Markovog oca, kralja Vukašina','Miloševa','Ničija — nova je'], tacan:1,
+      obrazlozenje:'„Poznao sam sablju baba moga.“ — sablja kralja Vukašina, poginulog na Marici.' },
+    { id:'q14', tezina:'srednje', pitanje:'Šta Marko uradi Mustaf-agi kad sazna istinu?',
+      opcije:['Oprosti mu','Odseče mu glavu','Protera ga','Uzme mu blago'], tacan:1,
+      obrazlozenje:'Marko osveti oca i pogubi Mustaf-agu.' },
+    { id:'q15', tezina:'srednje', pitanje:'Kako car (poočim) umiri Marka posle osvete?',
+      opcije:['Kazni ga','Daruje mu sto dukata','Protera ga iz vojske','Oduzme mu sablju'], tacan:1,
+      obrazlozenje:'„Car ga umiri stotinom dukata.“ — odnos vazala i gospodara.' },
+    { id:'q16', tezina:'lako', pitanje:'Kako Marko oslovljava turskog cara?',
+      opcije:['„Gospodaru“','„Care poočime“','„Sultane“','„Brate“'], tacan:1,
+      obrazlozenje:'„Ne pitaj me, care poočime!“ — Marko je, posle Marice, carev vazal („poočim“).' },
+    { id:'q17', tezina:'tesko', pitanje:'U kojoj bici je poginuo Vukašin, neposredno pre ove pesme?',
+      opcije:['Na Kosovu (1389)','Na Marici (1371)','Na Rovinama (1395)','Na Velbuždu (1330)'], tacan:1,
+      obrazlozenje:'Maričko poraz 1371: ginu Vukašin i brat Uglješa; Marko postaje turski vazal.' },
+    { id:'q18', tezina:'tesko', pitanje:'Šta sablja simbolično predstavlja u pesmi?',
+      opcije:['Običan plen','Genealoški dokument — dokaz porekla, gde krv otkriva istinu','Magični predmet','Carski dar'], tacan:1,
+      obrazlozenje:'Urezana imena triju generacija čine sablju „dokumentom“ — Marko kroz predmet otkriva istinu.' },
+    { id:'q19', tezina:'srednje', pitanje:'Šta junak nudi devojci da ga prenese do dvora?',
+      opcije:['Sablju','Tri ćemera blaga (dukata)','Konja','Prsten'], tacan:1,
+      obrazlozenje:'Ranjenik obećava tri ćemera blaga onome ko ga spasi i prenese.' },
+    { id:'q20', tezina:'srednje', pitanje:'Čime Marko prekoreva Mustaf-agu pre nego što ga pogubi?',
+      opcije:['Što je pobegao iz boja','Što nije izvidao rane ranjeniku, nego ga ubio','Što je lagao cara','Što je ukrao konja'], tacan:1,
+      obrazlozenje:'„Zašto, Ture… nijesi mu rane izvidao?“ — umesto da pomogne ranjeniku, ubio ga je zbog sablje.' },
+  ],
 };
 
 /* ---- Definicija nivoa (mapa + narativ) ---- */
@@ -236,8 +301,8 @@ const LEVELS = {
     road: [ {c:16,r:1},{c:16,r:4},{c:15,r:7},{c:16,r:10},{c:15,r:13},{c:16,r:17} ],
     // Tačke interesa: {col,row}
     poi: {
-      start: { c:16, r:1, tip:'dvor' },
-      cilj:  { c:13, r:4, tip:'cilj', opisano:'Štala kraj dvora — ralo i volovi za oranje.' },
+      start: { c:16, r:1, tip:'dvor', building:'dvor' },
+      cilj:  { c:13, r:4, tip:'cilj', building:'stala', opisano:'Štala kraj dvora — ralo i volovi za oranje.' },
       enemy: { c:15, r:7, tip:'enemy', enemy:'janjicar', opisano:'Turski janjičar sa tovarima blaga preprečuje carev drum.' },
       blago: { c:6, r:9, tip:'blago', dinari:200, hrana:5, opisano:'Škrinja sa srebrnim dinarima kraj puta.' },
     },
@@ -251,7 +316,8 @@ const LEVELS = {
         toast:'Uze ralo i volove! Sad ralom navali na janjičara na drumu.' },
       { id:'blago', poi:'enemy', kind:'battle', enemy:'janjicar',
         label:'Ralom obori janjičara na drumu i uzmi blago',
-        gate:['ralo'], gateToast:'Prvo uzmi ralo i volove kod štale — njime ćeš oboriti janjičara.' },
+        gate:['ralo'], gateToast:'Prvo uzmi ralo i volove kod štale — njime ćeš oboriti janjičara.',
+        winText:'Marko pobi janjičara ralom i volovima. Tri ćemera blaga — 900 mletačkih dukata (zlatnika) — i 20 XP. (Srbija 1371. kuje srebrni dinar; zlato je mletačko, za velike transakcije.)' },
       { id:'dinari', poi:'blago', kind:'collect',
         label:'Pokupi srebrne dinare iz škrinje',
         gate:['blago'], gateToast:'Prvo obori janjičara na drumu i uzmi blago, pa onda po dinare.',
@@ -263,12 +329,60 @@ const LEVELS = {
     ],
     // Poternja: koji cilj je „okida" (spawnOn), kad su goniči aktivni (activeAfter), brzina (step)
     pursuit: { enemy:'gonic', spawnOn:'blago', activeAfter:'blago', step:3 },
+    outro: {
+      eyebrow:'KRAJ PRVE PESME · ORANJE MARKA KRALJEVIĆA', title:'Nivo završen',
+      portrait:'portret_jevrosima', speaker:'Marko — staroj majci Jevrosimi',
+      line:'„Evo ti, majko, tri tovara blaga. To sam za tebe danas izorao!“',
+      summary:'Marko spušta pred majku oteto blago — tri ćemera mletačkih dukata i srebrne dinare s puta.' },
+  },
+
+  2: {
+    naslov: 'NIVO 2 — MARKO POZNAJE OČINU SABLJU',
+    citat: '„Poznao sam sablju baba moga.“',
+    stih: 'Rano rani Turkinja đevojka\nna Maricu bijeliti platno...',
+    grid: { cols:30, rows:19 },
+    terrain: {
+      mountRing: 1,
+      lake: { cx:15, cy:2.2, rx:13, ry:1.9 },        // reka Marica — krvava voda, pojas uz gornju ivicu
+      forests: [ {cx:5,cy:13,r:3.2}, {cx:25,cy:14,r:3.0} ],
+      fields:  [ {cx:16,cy:9,r:2.4} ],               // izgaženo bojište / vojni logor
+    },
+    road: [ {c:16,r:17},{c:16,r:13},{c:15,r:12},{c:14,r:9},{c:15,r:6} ],
+    poi: {
+      start:  { c:16, r:17, tip:'start',  building:'selo', opisano:'Markov logor u carevoj vojsci.' },
+      divan:  { c:15, r:12, tip:'divan',  building:'dvor', opisano:'Carev divan — smotra i sablja.' },
+      straza: { c:13, r:9,  tip:'straza', enemy:'straza',    opisano:'Mustaf-agina lična straža.' },
+      mejdan: { c:15, r:6,  tip:'mejdan', enemy:'mustafaga', opisano:'Mejdan na obali Marice.' },
+    },
+    objectives: [
+      { id:'sablja', poi:'divan', kind:'pickup', icon:'sablja',
+        label:'Preuzmi sablju na carevoj smotri',
+        toast:'Sablja se sama izvadi Marku iz korica! Tri slova: Novak kovač, Vukašin kralj, Kraljević Marko — očeva je.' },
+      { id:'straza', poi:'straza', kind:'battle', enemy:'straza',
+        label:'Probij se kroz Mustaf-aginu stražu', gate:['sablja'],
+        gateToast:'Prvo preuzmi sablju na smotri, pa onda na Mustaf-agu.',
+        winText:'Marko razbi Mustaf-aginu stražu i raščisti put do mejdana.' },
+      { id:'mejdan', poi:'mejdan', kind:'battle', enemy:'mustafaga',
+        label:'Mejdan sa Mustaf-agom — osveti oca', gate:['straza'],
+        gateToast:'Prvo razbij Mustaf-aginu stražu.',
+        winText:'Marko prepozna očevu sablju i osveti kralja Vukašina — Mustaf-agi pade glava!' },
+      { id:'caru', poi:'divan', kind:'return', outro:true,
+        label:'Vrati se pred cara poočima', gate:['sablja','straza','mejdan'],
+        gateToast:'Vrati se pred cara tek kad osvetiš oca.' },
+    ],
+    outro: {
+      eyebrow:'KRAJ DRUGE PESME · MARKO POZNAJE OČINU SABLJU', title:'Nivo završen',
+      portrait:'portret_marko', speaker:'Marko — caru poočimu',
+      line:'„Ne pitaj me, care poočime! Poznao sam sablju baba moga.“',
+      summary:'Osvećen je kralj Vukašin. Car umiri Marka stotinom dukata, a očeva sablja — sa tri zlatna balčaka — sad visi o Markovu bedru.' },
   },
 };
 
 /* ---- Nagrada janjičara (tri ćemera × 300 dukata) ---- */
 ENEMIES.janjicar.nagrada = { dukati:900, hrana:3 };
 ENEMIES.gonic.nagrada = { dukati:150, hrana:1 };
+ENEMIES.straza.nagrada = { dukati:60, hrana:2 };
+ENEMIES.mustafaga.nagrada = { dukati:100, hrana:3 };   // car ga umiri stotinom dukata
 
 window.MK = { ART, TERRAIN, CURRENCY, MARKO_START, SKILL_TREE, COMPANIONS, EQUIPMENT,
   ENEMIES, LEVELUP_CHOICES, ACTIONS, QUESTIONS, LEVELS };
