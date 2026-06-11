@@ -289,6 +289,9 @@ const LEVELS = {
     naslov: 'NIVO 1 — ORANJE MARKA KRALJEVIĆA',
     citat: '„Il’ je bilo ili nije bilo, ljudi vele da je od istine.“',
     stih: 'Vino pije Kraljeviću Marko\nsa staricom Jevrosimom majkom...',
+    majka: {
+      rec:'„O moj sinko, Kraljeviću Marko, ostavi se, sinko, četovanja, jer zlo dobra donijeti neće. Već ti uzmi ralo i volove, pak ori brda i doline.“',
+      savet:'Savet: Uzmi ralo i volove kod štale, pa njime obori janjičara na drumu — u njegovom blagu je tvoja nagrada.' },
     // ——— Kontinualni teren: generiše se iz REGIONA (genTerrain u screens_map) ———
     grid: { cols:30, rows:19 },
     terrain: {
@@ -340,6 +343,9 @@ const LEVELS = {
     naslov: 'NIVO 2 — MARKO POZNAJE OČINU SABLJU',
     citat: '„Poznao sam sablju baba moga.“',
     stih: 'Rano rani Turkinja đevojka\nna Maricu bijeliti platno...',
+    majka: {
+      rec:'„Idi, sinko, u carevu vojsku kad moraš — ali pamti čiji si sin. Tuđa sablja katkad krije svoju istinu.“',
+      savet:'Savet: Na carevoj smotri preuzmi sablju i pročitaj tri imena u balčaku; razbij Mustaf-aginu stražu, pa izađi na mejdan i osveti oca.' },
     grid: { cols:30, rows:19 },
     terrain: {
       mountRing: 1,
@@ -362,10 +368,10 @@ const LEVELS = {
         label:'Probij se kroz Mustaf-aginu stražu', gate:['sablja'],
         gateToast:'Prvo preuzmi sablju na smotri, pa onda na Mustaf-agu.',
         winText:'Marko razbi Mustaf-aginu stražu i raščisti put do mejdana.' },
-      { id:'mejdan', poi:'mejdan', kind:'battle', enemy:'mustafaga',
+      { id:'mejdan', poi:'mejdan', kind:'battle', enemy:'mustafaga', unlock:'sablja_v',
         label:'Mejdan sa Mustaf-agom — osveti oca', gate:['straza'],
         gateToast:'Prvo razbij Mustaf-aginu stražu.',
-        winText:'Marko prepozna očevu sablju i osveti kralja Vukašina — Mustaf-agi pade glava!' },
+        winText:'Marko prepozna očevu sablju i osveti kralja Vukašina — Mustaf-agi pade glava! Vukašinova sablja je sad Markova.' },
       { id:'caru', poi:'divan', kind:'return', outro:true,
         label:'Vrati se pred cara poočima', gate:['sablja','straza','mejdan'],
         gateToast:'Vrati se pred cara tek kad osvetiš oca.' },

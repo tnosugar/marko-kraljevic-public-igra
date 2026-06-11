@@ -386,6 +386,15 @@ function mkSpawn(lvl, objId){ // spawnuj goniče ako baš ovaj cilj okida potern
   if(lvl.pursuit && lvl.pursuit.spawnOn===objId)
     return (lvl.chaserSpawns||[]).map((p,i)=>({id:'gonic'+i, c:p.c, r:p.r}));
   return null; }
+function mkUnlock(s, obj){ // cilj može da otključa opremu (obj.unlock = id) i odmah je opremi
+  const { EQUIPMENT } = window.MK;
+  let unlocked=s.unlocked||[], equipped=s.equipped;
+  if(obj && obj.unlock && !unlocked.includes(obj.unlock)){
+    unlocked=[...unlocked, obj.unlock];
+    for(const slot in EQUIPMENT){ if(EQUIPMENT[slot].some(x=>x.id===obj.unlock)){ equipped={...equipped, [slot]:obj.unlock}; break; } }
+  }
+  return { unlocked, equipped };
+}
 
 function initState(){
   const { MARKO_START } = window.MK;
@@ -400,6 +409,7 @@ function initState(){
     party:['jevrosima'], partySlots:3,
     unlockedCompanions:['jevrosima'],
     learned:[],
+    unlocked:[],
     levelUpReady:false,
     map:{ started:false, pos:{c:5,r:1}, moveLeft:6, day:1, done:[], chasers:[], asked:[] },
     battle:null,
@@ -441,7 +451,8 @@ function reducer(s, a){
       const resources=mkReward(s.resources, obj.reward);
       const marko = (obj.reward&&obj.reward.xp) ? {...s.marko, xp:s.marko.xp+obj.reward.xp} : s.marko;
       const spawned=mkSpawn(lvl, a.id);
-      return {...s, marko, resources, map:{...s.map, done, chasers: spawned||s.map.chasers}};
+      const u=mkUnlock(s, obj);
+      return {...s, marko, resources, unlocked:u.unlocked, equipped:u.equipped, map:{...s.map, done, chasers: spawned||s.map.chasers}};
     }
     case 'END_TURN':
       return {...s, map:{...s.map, day:s.map.day+1, moveLeft:6}};
@@ -449,10 +460,12 @@ function reducer(s, a){
       return {...s, scene:'battle', battle:{ enemy:a.enemy, objId:a.objId||null, chaserId:a.chaserId||null }};
     case 'BATTLE_END':{
       const lvl=LEVELS[s.level]; const spawns=lvl.chaserSpawns||[];
-      let done=s.map.done, chasers=s.map.chasers;
+      let done=s.map.done, chasers=s.map.chasers, unlocked=s.unlocked||[], equipped=s.equipped;
       if(a.result==='win'){
         if(a.objId && !done.includes(a.objId)){ done=[...done, a.objId];
-          const sp=mkSpawn(lvl, a.objId); if(sp) chasers=sp; }   // pobeda nad cilj-protivnikom → upiši gotov + (možda) okini poteru
+          const sp=mkSpawn(lvl, a.objId); if(sp) chasers=sp;          // pobeda nad cilj-protivnikom → upiši gotov + (možda) okini poteru
+          const obj=(lvl.objectives||[]).find(o=>o.id===a.objId);
+          const u=mkUnlock(s, obj); unlocked=u.unlocked; equipped=u.equipped; }  // boss može da otključa opremu (npr. Vukašinova sablja)
         if(a.chaserId){ chasers=chasers.filter(c=>c.id!==a.chaserId); }
       } else if(a.chaserId){
         const idx = parseInt(a.chaserId.replace('gonic',''),10);
@@ -463,7 +476,7 @@ function reducer(s, a){
         ? {...s.marko, hp:a.markoHp, xp:s.marko.xp+(a.xpGain||0)}
         : {...s.marko, hp:a.markoHp};
       const res = a.result==='win' ? mkReward(s.resources, {dukati:a.dukati, hrana:a.hrana}) : s.resources;
-      return {...s, scene:'map', battle:null, marko, resources:res,
+      return {...s, scene:'map', battle:null, marko, resources:res, unlocked, equipped,
         learned:Array.from(new Set([...(s.learned), ...(a.learned||[])])),
         map:{...s.map, done, chasers}};
     }
@@ -486,7 +499,7 @@ function reducer(s, a){
     }
     case 'EQUIP':{
       const it=(EQUIPMENT[a.slot]||[]).find(x=>x.id===a.id);
-      if(!it || it.zakljucan) return s;
+      if(!it || (it.zakljucan && !(s.unlocked||[]).includes(a.id))) return s;
       return {...s, equipped:{...s.equipped, [a.slot]:a.id}};
     }
     case 'TOGGLE_PARTY':{

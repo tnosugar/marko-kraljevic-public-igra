@@ -98,14 +98,15 @@ function Modal({ title, onClose, children, wide }){
 function MajkaPanel({ state, onClose, dispatch }){
   const { ART, LEVELS } = window.MK;
   const lvl = LEVELS[state.level];
+  const mj = lvl.majka || {};
   return (
     <Modal title="Razgovor sa majkom Jevrosimom" onClose={onClose}>
       <div className="mk-dijalog">
         <Portrait src={ART.portret_jevrosima} size={120}/>
         <div className="mk-dijalog-txt">
           <div className="mk-dijalog-ime">{T('Jevrosima')}</div>
-          <p className="mk-dijalog-rec">{T('„O moj sinko, Kraljeviću Marko, ostavi se, sinko, četovanja, jer zlo dobra donijeti neće. Već ti uzmi ralo i volove, pak ori brda i doline.“')}</p>
-          <p className="mk-dijalog-savet">{T('Savet: Carev drum vodi kroz polje do štale. Na putu te čeka janjičar sa tovarima blaga — nemoj ga zaobići, jer u njegovom blagu je tvoja nagrada.')}</p>
+          {mj.rec && <p className="mk-dijalog-rec">{T(mj.rec)}</p>}
+          {mj.savet && <p className="mk-dijalog-savet">{T(mj.savet)}</p>}
           <div className="mk-citat" style={{textAlign:'left',marginTop:8,whiteSpace:'pre-line'}}>{T(lvl.stih)}</div>
         </div>
       </div>
@@ -156,7 +157,7 @@ function OpremaPanel({ state, dispatch, onClose }){
           <div key={slot} className="mk-equip-slot">
             <div className="mk-equip-slotname">{T(slotNames[slot])}</div>
             {EQUIPMENT[slot].map(it=>{
-              const locked = it.zakljucan;
+              const locked = it.zakljucan && !(state.unlocked||[]).includes(it.id);
               const sel = state.equipped[slot]===it.id;
               return (<button key={it.id} disabled={locked}
                 className={`mk-equip-item ${sel?'sel':''} ${locked?'locked':''}`}
