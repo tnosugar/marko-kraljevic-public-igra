@@ -378,6 +378,15 @@ const { useReducer } = React;
 /* ---------- Centralni game state ---------- */
 function effMax(s){ return window.mkEff(s,'maxHp'); }
 
+/* ---------- Engine ciljeva: nagrada + spawn potere (deklarativno iz data.js) ---------- */
+function mkReward(res, rw){ if(!rw) return res;
+  return {...res, dinari:res.dinari+(rw.dinari||0), dukati:res.dukati+(rw.dukati||0),
+    hrana:Math.min(30, res.hrana+(rw.hrana||0))}; }
+function mkSpawn(lvl, objId){ // spawnuj goniče ako baš ovaj cilj okida poternju
+  if(lvl.pursuit && lvl.pursuit.spawnOn===objId)
+    return (lvl.chaserSpawns||[]).map((p,i)=>({id:'gonic'+i, c:p.c, r:p.r}));
+  return null; }
+
 function initState(){
   const { MARKO_START } = window.MK;
   const s = {
@@ -392,8 +401,7 @@ function initState(){
     unlockedCompanions:['jevrosima'],
     learned:[],
     levelUpReady:false,
-    map:{ started:false, pos:{c:5,r:1}, moveLeft:6, day:1, cleared:[],
-          quest:'toStala', carry:{blago:false,ralo:false,dinari:false}, chasers:[], asked:[] },
+    map:{ started:false, pos:{c:5,r:1}, moveLeft:6, day:1, done:[], chasers:[], asked:[] },
     battle:null,
     script:'lat',
   };
@@ -412,8 +420,7 @@ function reducer(s, a){
     case 'START_LEVEL':{
       const start=LEVELS[s.level].poi.start;
       const ns={...s, scene:'map',
-        map:{ started:true, pos:{c:start.c,r:start.r}, moveLeft:6, day:1, cleared:[],
-              quest:'toStala', carry:{blago:false,ralo:false,dinari:false}, chasers:[], asked:[] }};
+        map:{ started:true, pos:{c:start.c,r:start.r}, moveLeft:6, day:1, done:[], chasers:[], asked:[] }};
       ns.marko={...ns.marko, hp:effMax(ns)};
       return ns;
     }
@@ -425,32 +432,28 @@ function reducer(s, a){
       return {...s, map:{...s.map, asked:[...(s.map.asked||[]), a.id]}};
     case 'RESET_ASKED':
       return {...s, map:{...s.map, asked:a.keep?[a.keep]:[]}};
-    case 'PICK_RALO':{
-      // Verno pesmi: Marko prvo uzme ralo, pa ralom navali na janjičara (još bez potere).
-      return {...s, map:{...s.map, carry:{...s.map.carry, ralo:true}, quest:'toEnemy',
-        cleared:[...s.map.cleared, 'cilj']}};
+    case 'COMPLETE_OBJECTIVE':{
+      // Cilj koji se rešava na mapi (pickup/collect/return) — primeni nagradu, upiši kao gotov, okini poteru ako treba.
+      const lvl=LEVELS[s.level];
+      const obj=(lvl.objectives||[]).find(o=>o.id===a.id);
+      if(!obj || s.map.done.includes(a.id)) return s;
+      const done=[...s.map.done, a.id];
+      const resources=mkReward(s.resources, obj.reward);
+      const marko = (obj.reward&&obj.reward.xp) ? {...s.marko, xp:s.marko.xp+obj.reward.xp} : s.marko;
+      const spawned=mkSpawn(lvl, a.id);
+      return {...s, marko, resources, map:{...s.map, done, chasers: spawned||s.map.chasers}};
     }
     case 'END_TURN':
       return {...s, map:{...s.map, day:s.map.day+1, moveLeft:6}};
-    case 'COLLECT':{
-      const carry = a.poi==='blago' ? {...s.map.carry, dinari:true} : s.map.carry;
-      const quest = a.poi==='blago' ? 'toDvor' : s.map.quest;
-      return {...s, resources:{...s.resources,
-          dinari:s.resources.dinari+(a.dinari||0),
-          dukati:s.resources.dukati+(a.dukati||0),
-          hrana:Math.min(30,s.resources.hrana+(a.hrana||0))},
-        map:{...s.map, cleared:[...s.map.cleared, a.poi], carry, quest}};
-    }
     case 'START_BATTLE':
-      return {...s, scene:'battle', battle:{ enemy:a.enemy, poi:a.poi, chaserId:a.chaserId||null }};
+      return {...s, scene:'battle', battle:{ enemy:a.enemy, objId:a.objId||null, chaserId:a.chaserId||null }};
     case 'BATTLE_END':{
-      const spawns = LEVELS[s.level].chaserSpawns||[];
-      let carry={...s.map.carry}, quest=s.map.quest, cleared=s.map.cleared, chasers=s.map.chasers;
+      const lvl=LEVELS[s.level]; const spawns=lvl.chaserSpawns||[];
+      let done=s.map.done, chasers=s.map.chasers;
       if(a.result==='win'){
-        if(a.poi==='enemy'){ carry.blago=true; quest='toDinari'; cleared=[...cleared,'enemy'];
-          // Marko obori janjičara i uze blago → dva goniča kreću u poteru
-          chasers = spawns.map((p,i)=>({id:'gonic'+i, c:p.c, r:p.r})); }
-        if(a.chaserId){ chasers = chasers.filter(c=>c.id!==a.chaserId); }
+        if(a.objId && !done.includes(a.objId)){ done=[...done, a.objId];
+          const sp=mkSpawn(lvl, a.objId); if(sp) chasers=sp; }   // pobeda nad cilj-protivnikom → upiši gotov + (možda) okini poteru
+        if(a.chaserId){ chasers=chasers.filter(c=>c.id!==a.chaserId); }
       } else if(a.chaserId){
         const idx = parseInt(a.chaserId.replace('gonic',''),10);
         const sp = spawns[idx];
@@ -459,15 +462,10 @@ function reducer(s, a){
       const marko = a.result==='win'
         ? {...s.marko, hp:a.markoHp, xp:s.marko.xp+(a.xpGain||0)}
         : {...s.marko, hp:a.markoHp};
-      const res = a.result==='win'
-        ? {...s.resources,
-            dinari:s.resources.dinari+(a.dinari||0),
-            dukati:s.resources.dukati+(a.dukati||0),
-            hrana:Math.min(30,s.resources.hrana+(a.hrana||0))}
-        : s.resources;
+      const res = a.result==='win' ? mkReward(s.resources, {dukati:a.dukati, hrana:a.hrana}) : s.resources;
       return {...s, scene:'map', battle:null, marko, resources:res,
         learned:Array.from(new Set([...(s.learned), ...(a.learned||[])])),
-        map:{...s.map, carry, quest, cleared, chasers}};
+        map:{...s.map, done, chasers}};
     }
     case 'LEVEL_COMPLETE':
       return {...s, scene:'hub', levelUpReady:true, map:{...s.map, started:false}};

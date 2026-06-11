@@ -290,16 +290,13 @@ function HexMap({ state, dispatch }){
   const canvasRef = useRef(null);
 
   const poiAt = (c,r)=>Object.entries(level.poi).find(([k,p])=>p.c===c&&p.r===r);
-  const carry = state.map.carry || {blago:false,ralo:false,dinari:false};
-  const quest = state.map.quest || 'toStala';
+  const objectives = level.objectives || [];
+  const done = state.map.done || [];
+  const isDone = id => done.includes(id);
+  const gateOk = o => !o.gate || o.gate.every(isDone);
+  const current = objectives.find(o=>!isDone(o.id));      // trenutni cilj (prati redosled)
+  const objTarget = current ? level.poi[current.poi] : null;
   const chasers = state.map.chasers || [];
-  const enemyCleared = carry.blago;
-  const raloDone = carry.ralo;
-  const dinariDone = carry.dinari;
-  const objTarget = quest==='toStala'?level.poi.cilj
-    : quest==='toEnemy'?level.poi.enemy
-    : quest==='toDinari'?level.poi.blago
-    : quest==='toDvor'?level.poi.start : null;
   const { dist, prev } = reachable(grid, pos, state.map.moveLeft);
 
   useEffect(()=>{ setTokenXY(hexCenter(pos.c,pos.r)); }, [pos.c,pos.r]);
@@ -324,43 +321,32 @@ function HexMap({ state, dispatch }){
     step();
   }
   function arrive(c,r){
-    const found = poiAt(c,r);
     let block=false;            // borba ili level-kraj → ne pomeraj goniče ovaj potez
-    let raloJustPicked=false;
-    if(found){
-      const [kind,p]=found;
-      if(kind==='cilj' && !raloDone){
-        raloJustPicked=true;
-        dispatch({type:'PICK_RALO'});
-        setToast('Uze ralo i volove! Sad ralom navali na janjičara na drumu.');
-      } else if(kind==='enemy' && !enemyCleared){
-        if(!raloDone){
-          setToast('Prvo uzmi ralo i volove kod štale — njime ćeš oboriti janjičara.');
-        } else {
-          block=true;
-          setTimeout(()=>dispatch({type:'START_BATTLE', enemy:p.enemy, poi:'enemy'}), 220);
-        }
-      } else if(kind==='blago' && enemyCleared && !dinariDone){
-        dispatch({type:'COLLECT', poi:'blago', dinari:p.dinari, hrana:p.hrana});
-        setToast(`Škrinja! +${p.dinari} srebrnih dinara, +${p.hrana} hrane.`);
-      } else if(kind==='blago' && !enemyCleared){
-        setToast('Prvo obori janjičara na drumu i uzmi blago, pa onda po dinare.');
-      } else if(kind==='start' && state.map.day>=1 && (enemyCleared||raloDone||dinariDone)){
-        if(carry.blago && raloDone && dinariDone){
-          block=true;
-          setTimeout(()=>setOutro(true), 350);   // završni prizor pred povratak u dvor
-        } else {
-          setToast('Vrati se u dvor tek kad skupiš blago janjičara, ralo i dinare.');
-        }
+    // Nađi (još nerešen) cilj koji cilja baš ovo polje
+    const obj = objectives.find(o=>{ const p=level.poi[o.poi]; return p && p.c===c && p.r===r && !isDone(o.id); });
+    if(obj){
+      if(!gateOk(obj)){
+        if(obj.gateToast) setToast(obj.gateToast);            // preduslov nije ispunjen
+      } else if(obj.kind==='battle'){
+        block=true;
+        setTimeout(()=>dispatch({type:'START_BATTLE', enemy:obj.enemy, objId:obj.id}), 220);
+      } else if(obj.kind==='return'){
+        block=true;
+        if(obj.outro) setTimeout(()=>setOutro(true), 350);    // završni prizor
+        else setTimeout(()=>dispatch({type:'LEVEL_COMPLETE'}), 600);
+      } else {                                                 // pickup / collect
+        dispatch({type:'COMPLETE_OBJECTIVE', id:obj.id});
+        if(obj.toast) setToast(obj.toast);
       }
     }
-    if(!block && !raloJustPicked) advanceChasers({c,r});
+    if(!block) advanceChasers({c,r});
   }
 
-  /* Poternja: goniči se primiču posle svakog Markovog poteza */
+  /* Poternja: goniči se primiču posle svakog Markovog poteza (dok je aktivna) */
   function advanceChasers(markoPos){
-    if(!(quest==='toDinari' || quest==='toDvor') || !chasers.length) return;
-    const STEP = (window.MKTWEAKS&&window.MKTWEAKS.tempo&&window.MKTWEAKS.tempo.chaser)||3;
+    const pur = level.pursuit;
+    if(!pur || !isDone(pur.activeAfter) || !chasers.length) return;
+    const STEP = (window.MKTWEAKS&&window.MKTWEAKS.tempo&&window.MKTWEAKS.tempo.chaser) || pur.step || 3;
     let caught=null;
     const moved = chasers.map(ch=>{
       const r=bfsNext(grid, {c:ch.c,r:ch.r}, markoPos, STEP);
@@ -369,7 +355,7 @@ function HexMap({ state, dispatch }){
       return np;
     });
     dispatch({type:'MOVE_CHASERS', chasers:moved});
-    if(caught) setTimeout(()=>dispatch({type:'START_BATTLE', enemy:'gonic', poi:null, chaserId:caught.id}), 340);
+    if(caught) setTimeout(()=>dispatch({type:'START_BATTLE', enemy:pur.enemy, chaserId:caught.id}), 340);
   }
 
   function endTurn(){ dispatch({type:'END_TURN'}); advanceChasers(pos); }
@@ -408,14 +394,14 @@ function HexMap({ state, dispatch }){
           return <img key={kind} src={href} className="mk-poi-img" alt=""
             style={{left:x, top:y, width:w, zIndex:Math.round(y)}} draggable="false"/>;
         })}
-        {!dinariDone && (()=>{ const p=level.poi.blago; const c=hexCenter(p.c,p.r);
-          return <div className="mk-poi-coin silver" style={{left:c.x, top:c.y, zIndex:Math.round(c.y)+1}}>
-            <Icon name="dinar" size={16} color="#3a414c"/></div>; })()}
+        {objectives.filter(o=>o.kind==='collect' && !isDone(o.id)).map(o=>{ const p=level.poi[o.poi]; const c=hexCenter(p.c,p.r);
+          return <div key={o.id} className="mk-poi-coin silver" style={{left:c.x, top:c.y, zIndex:Math.round(c.y)+1}}>
+            <Icon name="dinar" size={16} color="#3a414c"/></div>; })}
         {objTarget && (()=>{ const c=hexCenter(objTarget.c,objTarget.r);
           return <div className="mk-poi-flag pulse" style={{left:c.x, top:c.y-30, zIndex:99990}}>⚑</div>; })()}
-        {!enemyCleared && (()=>{ const p=level.poi.enemy; const c=hexCenter(p.c,p.r);
-          return <img src={ART.janjicar} className="mk-enemy-tok" alt=""
-            style={{left:c.x, top:c.y, width:40, zIndex:Math.round(c.y)+2}} draggable="false"/>; })()}
+        {objectives.filter(o=>o.kind==='battle' && !isDone(o.id)).map(o=>{ const p=level.poi[o.poi]; const c=hexCenter(p.c,p.r);
+          return <img key={o.id} src={ART.janjicar} className="mk-enemy-tok" alt=""
+            style={{left:c.x, top:c.y, width:40, zIndex:Math.round(c.y)+2}} draggable="false"/>; })}
         {chasers.map(ch=>{ const c=hexCenter(ch.c,ch.r);
           return <img key={ch.id} src={ART.janjicar} className="mk-enemy-tok chaser" alt=""
             style={{left:c.x, top:c.y, width:36, zIndex:Math.round(c.y)+2}} draggable="false"/>; })}
@@ -455,10 +441,9 @@ function HexMap({ state, dispatch }){
 function MapPanel({ state, dispatch, onEndTurn }){
   const { ART, COMPANIONS, LEVELS, CURRENCY } = window.MK;
   const m=state.marko;
-  const carry = state.map.carry || {};
-  const zadaci = LEVELS[state.level].zadaci || [];
-  const doneMap = { ralo:carry.ralo, blago:carry.blago, dinari:carry.dinari, povratak:false };
-  const activeId = !carry.ralo?'ralo':!carry.blago?'blago':!carry.dinari?'dinari':'povratak';
+  const objectives = LEVELS[state.level].objectives || [];
+  const done = state.map.done || [];
+  const current = objectives.find(o=>!done.includes(o.id));
   const chasing = (state.map.chasers||[]).length;
   return (
     <div className="mk-map-panel mk-panelframe">
@@ -484,10 +469,10 @@ function MapPanel({ state, dispatch, onEndTurn }){
       <Divider mt={6} mb={6}/>
       <div className="mk-mp-label">{T('Zadaci')}</div>
       <div className="mk-zadaci">
-        {zadaci.map(z=>{ const done=doneMap[z.id]; const act=z.id===activeId && !done;
-          return <div key={z.id} className={`mk-zadatak ${done?'done':''} ${act?'active':''}`}>
-            <span className="mk-zad-box">{done?'✓':(act?'▸':'')}</span>
-            <span>{T(z.tekst)}</span></div>; })}
+        {objectives.map(o=>{ const d=done.includes(o.id); const act=current && current.id===o.id;
+          return <div key={o.id} className={`mk-zadatak ${d?'done':''} ${act?'active':''}`}>
+            <span className="mk-zad-box">{d?'✓':(act?'▸':'')}</span>
+            <span>{T(o.label)}</span></div>; })}
       </div>
       {chasing>0 && <div className="mk-chase-warn">⚠ {T(chasing===1?'Goni te':'Gone te')} {chasing} {T(chasing===1?'neprijatelj!':'neprijatelja!')}</div>}
       <Divider mt={6} mb={6}/>

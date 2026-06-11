@@ -243,13 +243,26 @@ const LEVELS = {
     },
     // Dva goniča se pojave kad Marko obori janjičara i uzme blago — krenu u poteru
     chaserSpawns: [ {c:17,r:8}, {c:13,r:8} ],
-    // Spisak zadataka (redosled, verno pesmi) — prati napredak
-    zadaci: [
-      { id:'ralo',   tekst:'Uzmi ralo i volove kod štale' },
-      { id:'blago',  tekst:'Ralom obori janjičara na drumu i uzmi blago' },
-      { id:'dinari', tekst:'Pokupi srebrne dinare iz škrinje' },
-      { id:'povratak', tekst:'Vrati se u dvor i predaj blago majci' },
+    // ——— Deklarativni ciljevi (engine ih izvršava; `gate` = preduslovni ciljevi) ———
+    // kind: pickup | collect | battle | return.  Iste „cigle" se koriste za sve nivoe.
+    objectives: [
+      { id:'ralo',  poi:'cilj',  kind:'pickup',
+        label:'Uzmi ralo i volove kod štale', icon:'ralo',
+        toast:'Uze ralo i volove! Sad ralom navali na janjičara na drumu.' },
+      { id:'blago', poi:'enemy', kind:'battle', enemy:'janjicar',
+        label:'Ralom obori janjičara na drumu i uzmi blago',
+        gate:['ralo'], gateToast:'Prvo uzmi ralo i volove kod štale — njime ćeš oboriti janjičara.' },
+      { id:'dinari', poi:'blago', kind:'collect',
+        label:'Pokupi srebrne dinare iz škrinje',
+        gate:['blago'], gateToast:'Prvo obori janjičara na drumu i uzmi blago, pa onda po dinare.',
+        reward:{ dinari:200, hrana:5 }, toast:'Škrinja! +200 srebrnih dinara, +5 hrane.' },
+      { id:'povratak', poi:'start', kind:'return', outro:true,
+        label:'Vrati se u dvor i predaj blago majci',
+        gate:['ralo','blago','dinari'],
+        gateToast:'Vrati se u dvor tek kad skupiš ralo, blago janjičara i dinare.' },
     ],
+    // Poternja: koji cilj je „okida" (spawnOn), kad su goniči aktivni (activeAfter), brzina (step)
+    pursuit: { enemy:'gonic', spawnOn:'blago', activeAfter:'blago', step:3 },
   },
 };
 

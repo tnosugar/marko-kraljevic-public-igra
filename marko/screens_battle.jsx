@@ -150,14 +150,14 @@ function Battle({ state, dispatch }){
     addLog('Marko klonu... ali majka ga vraća u Prilep.', 'sys');
   }
   function finish(){
-    const poi = state.battle.poi, chaserId = state.battle.chaserId;
+    const objId = state.battle.objId, chaserId = state.battle.chaserId;
     if(result==='win'){
       const nag = enemyDef.nagrada || { dukati:0, hrana:0 };
       dispatch({type:'BATTLE_END', result:'win', markoHp, xpGain:xpGain+(chaserId?10:20),
-        learned, dukati:nag.dukati, hrana:nag.hrana, poi, chaserId});
+        learned, dukati:nag.dukati, hrana:nag.hrana, objId, chaserId});
     } else {
       dispatch({type:'BATTLE_END', result:'lose', markoHp:Math.max(15,Math.round(maxHp*0.4)),
-        learned, poi:null, chaserId});
+        learned, objId:null, chaserId});
     }
   }
   useEffect(()=>()=>clearTimer(), []);
@@ -195,7 +195,7 @@ function Battle({ state, dispatch }){
       <div className="mk-battle-bottom">
         {myTurn && !showDoziv &&
           <div className="mk-actions">
-            {ACTIONS.filter(a=> a.id!=='ralo' || (state.map.carry && state.map.carry.ralo)).map(a=>{
+            {ACTIONS.filter(a=> a.id!=='ralo' || (state.map.done && state.map.done.includes('ralo'))).map(a=>{
               const dis = a.id==='doziv' && dozivAbil.length===0;
               const ico = ART.icon && ART.icon[a.id];
               return <button key={a.id} className="mk-action" disabled={dis} onClick={()=>doAction(a)}>
